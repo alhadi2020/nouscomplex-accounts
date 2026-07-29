@@ -526,4 +526,712 @@
       </div>
     </form>`;
     
-    $("#class-create").onsubmit = e => cls ? updateClass(e,
+    $("#class-create").onsubmit = e => cls ? updateClass(e, cls.id) : createClass(e);
+    $("#cancel-class-form").onclick = () => form.classList.add("hidden");
+  }
+
+  async function createClass(e) {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const rawData = Object.fromEntries(f.entries());
+    const data = cleanFormData(rawData);
+    
+    try {
+      await api(state.db.from("classes").insert(data));
+      flash("Class added successfully.");
+      await loadAllData();
+      classes();
+    } catch (err) { 
+      console.error('Error creating class:', err);
+      flash(err.message, true); 
+    }
+  }
+
+  async function updateClass(e, id) {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const rawData = Object.fromEntries(f.entries());
+    const data = cleanFormData(rawData);
+    
+    try {
+      await api(state.db.from("classes").update(data).eq("id", id));
+      flash("Class updated successfully.");
+      await loadAllData();
+      classes();
+    } catch (err) { 
+      console.error('Error updating class:', err);
+      flash(err.message, true); 
+    }
+  }
+
+  async function deleteClass(id) {
+    if (!confirm("Delete this class? This cannot be undone.")) return;
+    try {
+      await api(state.db.from("classes").delete().eq("id", id));
+      flash("Class deleted.");
+      await loadAllData();
+      classes();
+    } catch (err) { 
+      flash(/foreign key|violat/i.test(err.message) ? "This class has students and cannot be deleted." : err.message, true); 
+    }
+  }
+
+  // ============================================================
+  // TEACHERS
+  // ============================================================
+  
+  async function teachers() {
+    setTemplate("#teachers-template");
+    await loadAllData();
+    renderTeachersTable();
+    $("#add-teacher").onclick = () => showTeacherForm();
+  }
+
+  function renderTeachersTable() {
+    const classMap = Object.fromEntries(state.classes.map(c => [c.id, c]));
+    $("#teachers-table").innerHTML = state.teachers.length ? `
+      <div class="table-wrap"><table>
+        <thead><tr><th>Name</th><th>Class</th><th>Joining Date</th><th>Exit Date</th><th>Salary</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>${state.teachers.map(t => {
+          const cls = classMap[t.class_id];
+          return `<tr>
+            <td>${esc(t.name)}</td>
+            <td>${cls ? esc(cls.name) : '—'}</td>
+            <td>${esc(t.joining_date || '—')}</td>
+            <td>${esc(t.exit_date || '—')}</td>
+            <td>${formatCurrency(t.salary || 0)}</td>
+            <td><span class="status ${t.active !== false ? 'active' : 'inactive'}">${t.active !== false ? 'Active' : 'Inactive'}</span></td>
+            <td class="row-actions">
+              <button class="text-button edit-teacher" data-id="${t.id}">Edit</button>
+              <button class="text-button toggle-teacher" data-id="${t.id}">${t.active !== false ? 'Deactivate' : 'Activate'}</button>
+              <button class="danger delete-teacher" data-id="${t.id}">Delete</button>
+            </td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>` : empty("No teachers found.");
+    
+    $$(".edit-teacher").forEach(btn => btn.onclick = () => showTeacherForm(state.teachers.find(t => t.id === btn.dataset.id)));
+    $$(".delete-teacher").forEach(btn => btn.onclick = () => deleteTeacher(btn.dataset.id));
+    $$(".toggle-teacher").forEach(btn => btn.onclick = () => toggleTeacher(btn.dataset.id));
+  }
+
+  function showTeacherForm(teacher = null) {
+    const form = $("#teacher-form");
+    form.classList.remove("hidden");
+    const classOptions = state.classes.map(c => 
+      `<option value="${c.id}" ${teacher?.class_id === c.id ? 'selected' : ''}>${esc(c.name)}</option>`
+    ).join('');
+    
+    form.innerHTML = `<form id="teacher-create">
+      <div class="form-grid">
+        <label>Name <input name="name" required value="${teacher ? esc(teacher.name) : ''}"></label>
+        <label>Class <select name="class_id"><option value="">None</option>${classOptions}</select></label>
+        <label>Joining Date <input name="joining_date" type="date" value="${teacher ? teacher.joining_date : ''}"></label>
+        <label>Exit Date <input name="exit_date" type="date" value="${teacher ? teacher.exit_date : ''}"></label>
+        <label>Salary (PKR) <input name="salary" type="number" step="0.01" value="${teacher ? teacher.salary : ''}"></label>
+        <label>Increment <input name="increment" type="number" step="0.01" value="${teacher ? teacher.increment : ''}" placeholder="Amount"></label>
+        <label>Increment Date <input name="increment_date" type="date" value="${teacher ? teacher.increment_date : ''}"></label>
+        <label>Decrement <input name="decrement" type="number" step="0.01" value="${teacher ? teacher.decrement : ''}" placeholder="Amount"></label>
+        <label>Decrement Date <input name="decrement_date" type="date" value="${teacher ? teacher.decrement_date : ''}"></label>
+        <label>Leaves <input name="leaves" type="number" value="${teacher ? teacher.leaves : 0}" placeholder="Days"></label>
+        <label>Status <select name="active"><option value="true" ${teacher?.active !== false ? 'selected' : ''}>Active</option><option value="false" ${teacher?.active === false ? 'selected' : ''}>Inactive</option></select></label>
+      </div>
+      <div class="toolbar">
+        <button class="primary">${teacher ? 'Update Teacher' : 'Add Teacher'}</button>
+        <button type="button" class="secondary" id="cancel-teacher-form">Cancel</button>
+      </div>
+    </form>`;
+    
+    $("#teacher-create").onsubmit = e => teacher ? updateTeacher(e, teacher.id) : createTeacher(e);
+    $("#cancel-teacher-form").onclick = () => form.classList.add("hidden");
+  }
+
+  async function createTeacher(e) {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const rawData = Object.fromEntries(f.entries());
+    
+    const data = cleanFormData(rawData);
+    data.salary = parseFloat(data.salary) || 0;
+    data.increment = parseFloat(data.increment) || 0;
+    data.decrement = parseFloat(data.decrement) || 0;
+    data.leaves = parseInt(data.leaves) || 0;
+    data.active = data.active === 'true';
+    
+    try {
+      await api(state.db.from("teachers").insert(data));
+      flash("Teacher added successfully.");
+      await loadAllData();
+      teachers();
+    } catch (err) { 
+      console.error('Error creating teacher:', err);
+      flash(err.message, true); 
+    }
+  }
+
+  async function updateTeacher(e, id) {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const rawData = Object.fromEntries(f.entries());
+    
+    const data = cleanFormData(rawData);
+    data.salary = parseFloat(data.salary) || 0;
+    data.increment = parseFloat(data.increment) || 0;
+    data.decrement = parseFloat(data.decrement) || 0;
+    data.leaves = parseInt(data.leaves) || 0;
+    data.active = data.active === 'true';
+    
+    try {
+      await api(state.db.from("teachers").update(data).eq("id", id));
+      flash("Teacher updated successfully.");
+      await loadAllData();
+      teachers();
+    } catch (err) { 
+      console.error('Error updating teacher:', err);
+      flash(err.message, true); 
+    }
+  }
+
+  async function deleteTeacher(id) {
+    if (!confirm("Delete this teacher? This cannot be undone.")) return;
+    try {
+      await api(state.db.from("teachers").delete().eq("id", id));
+      flash("Teacher deleted.");
+      await loadAllData();
+      teachers();
+    } catch (err) { 
+      flash(/foreign key|violat/i.test(err.message) ? "This teacher has salary records and cannot be deleted." : err.message, true); 
+    }
+  }
+
+  async function toggleTeacher(id) {
+    const teacher = state.teachers.find(t => t.id === id);
+    if (!teacher) return;
+    try {
+      await api(state.db.from("teachers").update({ active: teacher.active !== false ? false : true }).eq("id", id));
+      flash(teacher.active !== false ? "Teacher deactivated." : "Teacher activated.");
+      await loadAllData();
+      teachers();
+    } catch (err) { flash(err.message, true); }
+  }
+
+  // ============================================================
+  // FEE COLLECTION
+  // ============================================================
+  
+  async function fee() {
+    setTemplate("#fee-template");
+    await loadAllData();
+    populateStudentSelect('fee-student');
+    $("#fee-date").value = isoToday();
+    renderFeeHistory();
+    $("#record-fee").onclick = recordFee;
+  }
+
+  function renderFeeHistory() {
+    const studentMap = Object.fromEntries(state.students.map(s => [s.id, s]));
+    $("#fee-history").innerHTML = state.feeRecords.length ? `
+      <div class="table-wrap"><table>
+        <thead><tr><th>Student</th><th>Amount</th><th>Date</th></tr></thead>
+        <tbody>${state.feeRecords.slice(0, 50).map(r => {
+          const student = studentMap[r.student_id];
+          return `<tr>
+            <td>${student ? esc(student.name) : '—'}</td>
+            <td class="amount-positive">${formatCurrency(r.amount)}</td>
+            <td>${esc(r.payment_date || '')}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>` : empty("No fee records found.");
+  }
+
+  async function recordFee() {
+    const studentId = $("#fee-student").value;
+    const amount = parseFloat($("#fee-amount").value);
+    const date = $("#fee-date").value;
+    if (!studentId) { flash("Please select a student.", true); return; }
+    if (!amount || amount <= 0) { flash("Please enter a valid amount.", true); return; }
+    if (!date) { flash("Please select a date.", true); return; }
+    const student = state.students.find(s => s.id === studentId);
+    try {
+      await api(state.db.from("fee_payments").insert({
+        student_id: studentId,
+        student_name: student?.name || '',
+        amount: amount,
+        payment_date: date
+      }));
+      flash("Fee payment recorded.");
+      await loadAllData();
+      fee();
+    } catch (err) { flash(err.message, true); }
+  }
+
+  // ============================================================
+  // SALARY PAYMENTS
+  // ============================================================
+  
+  async function salary() {
+    setTemplate("#salary-template");
+    await loadAllData();
+    populateTeacherSelect('salary-teacher');
+    $("#salary-date").value = isoToday();
+    renderSalaryHistory();
+    $("#record-salary").onclick = recordSalary;
+  }
+
+  function renderSalaryHistory() {
+    const teacherMap = Object.fromEntries(state.teachers.map(t => [t.id, t]));
+    $("#salary-history").innerHTML = state.salaryRecords.length ? `
+      <div class="table-wrap"><table>
+        <thead><tr><th>Teacher</th><th>Amount</th><th>Date</th></tr></thead>
+        <tbody>${state.salaryRecords.slice(0, 50).map(r => {
+          const teacher = teacherMap[r.teacher_id];
+          return `<tr>
+            <td>${teacher ? esc(teacher.name) : '—'}</td>
+            <td class="amount-negative">${formatCurrency(r.amount)}</td>
+            <td>${esc(r.payment_date || '')}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>` : empty("No salary records found.");
+  }
+
+  async function recordSalary() {
+    const teacherId = $("#salary-teacher").value;
+    const amount = parseFloat($("#salary-amount").value);
+    const date = $("#salary-date").value;
+    if (!teacherId) { flash("Please select a teacher.", true); return; }
+    if (!amount || amount <= 0) { flash("Please enter a valid amount.", true); return; }
+    if (!date) { flash("Please select a date.", true); return; }
+    const teacher = state.teachers.find(t => t.id === teacherId);
+    try {
+      await api(state.db.from("salary_payments").insert({
+        teacher_id: teacherId,
+        teacher_name: teacher?.name || '',
+        amount: amount,
+        payment_date: date
+      }));
+      flash("Salary payment recorded.");
+      await loadAllData();
+      salary();
+    } catch (err) { flash(err.message, true); }
+  }
+
+  // ============================================================
+  // EXPENSES
+  // ============================================================
+  
+  async function expenses() {
+    setTemplate("#expenses-template");
+    await loadAllData();
+    populateExpenseCategories();
+    $("#expense-date").value = isoToday();
+    renderExpenses();
+    $("#record-expense").onclick = recordExpense;
+    $("#add-expense-category").onclick = () => showAddCategoryModal();
+  }
+
+  function populateExpenseCategories() {
+    const select = $("#expense-category");
+    select.innerHTML = `<option value="">Select Category</option>` + 
+      state.expenseCategories.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  }
+
+  function renderExpenses() {
+    const catMap = Object.fromEntries(state.expenseCategories.map(c => [c.id, c]));
+    $("#expense-history").innerHTML = state.expenses.length ? `
+      <div class="table-wrap"><table>
+        <thead><tr><th>Category</th><th>Description</th><th>Amount</th><th>Date</th></tr></thead>
+        <tbody>${state.expenses.slice(0, 50).map(r => {
+          const cat = catMap[r.category_id];
+          return `<tr>
+            <td>${cat ? esc(cat.name) : '—'}</td>
+            <td>${esc(r.description || '')}</td>
+            <td class="amount-negative">${formatCurrency(r.amount)}</td>
+            <td>${esc(r.date || '')}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>` : empty("No expenses recorded.");
+  }
+
+  async function recordExpense() {
+    const categoryId = $("#expense-category").value;
+    const description = $("#expense-description").value.trim();
+    const amount = parseFloat($("#expense-amount").value);
+    const date = $("#expense-date").value;
+    if (!categoryId) { flash("Please select a category.", true); return; }
+    if (!amount || amount <= 0) { flash("Please enter a valid amount.", true); return; }
+    if (!date) { flash("Please select a date.", true); return; }
+    try {
+      await api(state.db.from("expenses").insert({
+        category_id: categoryId,
+        description: description || null,
+        amount: amount,
+        date: date
+      }));
+      flash("Expense recorded.");
+      await loadAllData();
+      expenses();
+    } catch (err) { flash(err.message, true); }
+  }
+
+  function showAddCategoryModal() {
+    const modal = document.getElementById('modal-overlay');
+    const body = document.getElementById('modal-body');
+    body.innerHTML = `
+      <h2>Add Expense Category</h2>
+      <div class="form-grid" style="grid-template-columns:1fr;">
+        <label>Category Name <input id="new-category-name" placeholder="e.g., Utilities, Rent, Supplies"></label>
+      </div>
+      <div class="toolbar">
+        <button id="save-category" class="primary">Save Category</button>
+        <button id="cancel-category" class="secondary">Cancel</button>
+      </div>
+    `;
+    modal.classList.add('show');
+    
+    document.getElementById('save-category').onclick = async () => {
+      const name = document.getElementById('new-category-name').value.trim();
+      if (!name) { flash("Please enter a category name.", true); return; }
+      try {
+        await api(state.db.from("expense_categories").insert({ name }));
+        flash("Category added.");
+        await loadAllData();
+        modal.classList.remove('show');
+        expenses();
+      } catch (err) { flash(err.message, true); }
+    };
+    
+    document.getElementById('cancel-category').onclick = () => modal.classList.remove('show');
+    document.getElementById('modal-close').onclick = () => modal.classList.remove('show');
+    modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('show'); };
+  }
+
+  // ============================================================
+  // BALANCE SHEET - ENHANCED WITH PAYABLE
+  // ============================================================
+  
+  async function balanceSheet() {
+    setTemplate("#balance-sheet-template");
+    await loadAllData();
+    populateBalanceSheetFilters();
+    $("#balance-year").onchange = renderBalanceSheet;
+    $("#balance-month").onchange = renderBalanceSheet;
+    $("#balance-view").onchange = renderBalanceSheet;
+    renderBalanceSheet();
+  }
+
+  function populateBalanceSheetFilters() {
+    const yearSelect = $("#balance-year");
+    const currentYear = new Date().getFullYear();
+    yearSelect.innerHTML = '';
+    for (let y = currentYear - 5; y <= currentYear; y++) {
+      yearSelect.innerHTML += `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`;
+    }
+    
+    const monthSelect = $("#balance-month");
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    monthSelect.innerHTML = `<option value="">All Months</option>` + 
+      months.map((m, i) => `<option value="${String(i + 1).padStart(2, '0')}">${m}</option>`).join('');
+  }
+
+  function renderBalanceSheet() {
+    const year = parseInt($("#balance-year").value);
+    const month = $("#balance-month").value;
+    const view = $("#balance-view").value || 'summary';
+
+    // Filter fee records (income)
+    let fees = state.feeRecords;
+    if (year) fees = fees.filter(r => r.payment_date && new Date(r.payment_date).getFullYear() === year);
+    if (month) fees = fees.filter(r => r.payment_date && String(new Date(r.payment_date).getMonth() + 1).padStart(2, '0') === month);
+
+    // Filter salary records (expense/payable)
+    let salaries = state.salaryRecords;
+    if (year) salaries = salaries.filter(r => r.payment_date && new Date(r.payment_date).getFullYear() === year);
+    if (month) salaries = salaries.filter(r => r.payment_date && String(new Date(r.payment_date).getMonth() + 1).padStart(2, '0') === month);
+
+    // Filter expenses (expense/payable)
+    let expenses = state.expenses;
+    if (year) expenses = expenses.filter(r => r.date && new Date(r.date).getFullYear() === year);
+    if (month) expenses = expenses.filter(r => r.date && String(new Date(r.date).getMonth() + 1).padStart(2, '0') === month);
+
+    const totalFees = fees.reduce((sum, r) => sum + (r.amount || 0), 0);
+    const totalSalaries = salaries.reduce((sum, r) => sum + (r.amount || 0), 0);
+    const totalExpenses = expenses.reduce((sum, r) => sum + (r.amount || 0), 0);
+    
+    // TOTAL PAYABLE = Salary Payments + Other Expenses
+    const totalPayable = totalSalaries + totalExpenses;
+    const netBalance = totalFees - totalPayable;
+
+    const dateLabel = month ? `${new Date(year, parseInt(month) - 1).toLocaleString('default', { month: 'long' })} ${year}` : `Year ${year}`;
+
+    // Calculate pending dues (students who haven't paid full fee)
+    const dues = calculateDues();
+
+    let html = `
+      <!-- Summary Stats -->
+      <div class="stats" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+        <article class="green">
+          <span>Total Fee Collected (Income)</span>
+          <strong>${formatCurrency(totalFees)}</strong>
+        </article>
+        <article class="red">
+          <span>Total Salary Paid</span>
+          <strong>${formatCurrency(totalSalaries)}</strong>
+        </article>
+        <article class="red">
+          <span>Total Other Expenses</span>
+          <strong>${formatCurrency(totalExpenses)}</strong>
+        </article>
+        <article class="payable-highlight">
+          <span style="font-weight: 700; color: #991b1b;">TOTAL PAYABLE</span>
+          <strong style="color: #991b1b; font-size: 28px;">${formatCurrency(totalPayable)}</strong>
+          <span style="display: block; font-size: 12px; color: #6b7280; margin-top: 4px;">(Salary + Expenses)</span>
+        </article>
+        <article class="${netBalance >= 0 ? 'green' : 'red'}">
+          <span>Net Balance (${dateLabel})</span>
+          <strong>${formatCurrency(netBalance)}</strong>
+        </article>
+      </div>
+    `;
+
+    // Detailed breakdown
+    if (view === 'detailed') {
+      // Fee Collection Details
+      html += `<div class="panel-heading" style="margin-top:20px;"><h2>Fee Collection Details (Income)</h2></div>`;
+      if (fees.length) {
+        html += `<div class="table-wrap"><table>
+          <thead><tr><th>Student</th><th>Amount</th><th>Date</th></tr></thead>
+          <tbody>${fees.map(r => `
+            <tr><td>${esc(r.student_name || '—')}</td><td class="amount-positive">${formatCurrency(r.amount)}</td><td>${esc(r.payment_date || '')}</td></tr>
+          `).join('')}</tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td><strong>Total Fee Collected</strong></td>
+              <td><strong class="amount-positive">${formatCurrency(totalFees)}</strong></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table></div>`;
+      } else {
+        html += empty("No fee records found.");
+      }
+
+      // Salary Payments Details
+      html += `<div class="panel-heading" style="margin-top:20px;"><h2>Salary Payments (Payable)</h2></div>`;
+      if (salaries.length) {
+        html += `<div class="table-wrap"><table>
+          <thead><tr><th>Teacher</th><th>Amount</th><th>Date</th></tr></thead>
+          <tbody>${salaries.map(r => `
+            <tr><td>${esc(r.teacher_name || '—')}</td><td class="amount-negative">${formatCurrency(r.amount)}</td><td>${esc(r.payment_date || '')}</td></tr>
+          `).join('')}</tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td><strong>Total Salary Paid</strong></td>
+              <td><strong class="amount-negative">${formatCurrency(totalSalaries)}</strong></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table></div>`;
+      } else {
+        html += empty("No salary records found.");
+      }
+
+      // Other Expenses Details
+      html += `<div class="panel-heading" style="margin-top:20px;"><h2>Other Expenses (Payable)</h2></div>`;
+      if (expenses.length) {
+        const catMap = Object.fromEntries(state.expenseCategories.map(c => [c.id, c]));
+        html += `<div class="table-wrap"><table>
+          <thead><tr><th>Category</th><th>Description</th><th>Amount</th><th>Date</th></tr></thead>
+          <tbody>${expenses.map(r => {
+            const cat = catMap[r.category_id];
+            return `<tr><td>${cat ? esc(cat.name) : '—'}</td><td>${esc(r.description || '')}</td><td class="amount-negative">${formatCurrency(r.amount)}</td><td>${esc(r.date || '')}</td></tr>`;
+          }).join('')}</tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td><strong>Total Other Expenses</strong></td>
+              <td><strong class="amount-negative">${formatCurrency(totalExpenses)}</strong></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table></div>`;
+      } else {
+        html += empty("No expense records found.");
+      }
+
+      // PAYABLE SUMMARY
+      html += `
+        <div class="payable-summary-panel">
+          <div class="panel-heading">
+            <h2 style="color: #991b1b;">PAYABLE SUMMARY</h2>
+          </div>
+          <div class="stats" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+            <article style="background: white;">
+              <span>Salary Payments</span>
+              <strong class="amount-negative">${formatCurrency(totalSalaries)}</strong>
+            </article>
+            <article style="background: white;">
+              <span>Other Expenses</span>
+              <strong class="amount-negative">${formatCurrency(totalExpenses)}</strong>
+            </article>
+            <article style="background: #991b1b; color: white; border: none; padding: 20px;">
+              <span style="color: #fca5a5; font-weight: 600;">TOTAL PAYABLE</span>
+              <strong style="color: white; font-size: 28px; display: block;">${formatCurrency(totalPayable)}</strong>
+              <span style="font-size: 12px; color: #fca5a5;">(Salary + Expenses)</span>
+            </article>
+          </div>
+        </div>
+      `;
+    }
+
+    // Summary View
+    if (view === 'summary') {
+      html += `
+        <div class="panel" style="margin-top:20px;">
+          <div class="panel-heading"><h2>Summary</h2></div>
+          <div class="stats" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+            <article class="green">
+              <span>Total Income (Fee Collected)</span>
+              <strong>${formatCurrency(totalFees)}</strong>
+            </article>
+            <article class="payable-highlight" style="border: 2px solid #991b1b;">
+              <span style="font-weight: 700; color: #991b1b;">TOTAL PAYABLE</span>
+              <strong style="color: #991b1b; font-size: 24px;">${formatCurrency(totalPayable)}</strong>
+              <span style="display: block; font-size: 11px; color: #6b7280;">(Salary + Expenses)</span>
+            </article>
+            <article class="${netBalance >= 0 ? 'green' : 'red'}">
+              <span>Net Position</span>
+              <strong>${formatCurrency(netBalance)}</strong>
+            </article>
+            <article style="background: #fef3c7; border: 1px solid #f59e0b;">
+              <span>Total Dues (Fee Outstanding)</span>
+              <strong style="color: #92400e;">${formatCurrency(dues)}</strong>
+            </article>
+          </div>
+        </div>
+      `;
+    }
+
+    document.getElementById('balance-sheet-content').innerHTML = html;
+  }
+
+  function calculateDues() {
+    const feeMap = {};
+    state.feeRecords.forEach(r => {
+      if (!feeMap[r.student_id]) feeMap[r.student_id] = 0;
+      feeMap[r.student_id] += r.amount || 0;
+    });
+    let dues = 0;
+    state.students.forEach(s => {
+      if (s.active === false) return;
+      const expectedFee = s.fee || 0;
+      const collected = feeMap[s.id] || 0;
+      if (expectedFee > collected) dues += (expectedFee - collected);
+    });
+    return dues;
+  }
+
+  // ============================================================
+  // HELPERS
+  // ============================================================
+  
+  function populateClassFilter(selectId) {
+    const select = $(`#${selectId}`);
+    if (!select) return;
+    select.innerHTML = `<option value="">All Classes</option>` + 
+      state.classes.map(c => `<option value="${c.id}">${esc(c.name)}${c.section ? ' — ' + esc(c.section) : ''}</option>`).join('');
+  }
+
+  function populateStudentSelect(selectId) {
+    const select = $(`#${selectId}`);
+    if (!select) return;
+    select.innerHTML = `<option value="">Select Student</option>` + 
+      state.students.filter(s => s.active !== false).map(s => `<option value="${s.id}">${esc(s.name)}${s.roll_number ? ' (' + esc(s.roll_number) + ')' : ''}</option>`).join('');
+  }
+
+  function populateTeacherSelect(selectId) {
+    const select = $(`#${selectId}`);
+    if (!select) return;
+    select.innerHTML = `<option value="">Select Teacher</option>` + 
+      state.teachers.filter(t => t.active !== false).map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
+  }
+
+  // ============================================================
+  // SIDEBAR
+  // ============================================================
+  
+  function openSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (sidebar) sidebar.classList.add('open');
+    if (overlay) overlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (sidebar) sidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  // ============================================================
+  // INITIALIZATION
+  // ============================================================
+  
+  function init() {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) loadingScreen.style.display = 'flex';
+
+    if (configured) {
+      state.db = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+    }
+
+    // Auth events
+    $("#auth-form").onsubmit = signIn;
+    $("#signup-button").onclick = signUp;
+    $("#forgot-password-btn").onclick = forgotPassword;
+    $("#signout").onclick = async () => {
+      await state.db.auth.signOut();
+      localStorage.removeItem('nousomplex_accounts_last_page');
+      showAuth();
+    };
+
+    // Sidebar events
+    const menuToggle = document.getElementById('menu-toggle-btn');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const closeBtn = document.getElementById('sidebar-close-btn');
+
+    if (menuToggle) menuToggle.addEventListener('click', () => {
+      sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+    });
+    if (overlay) overlay.addEventListener('click', closeSidebar);
+    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
+
+    // Navigation
+    document.addEventListener('click', function(e) {
+      const button = e.target.closest('#nav button[data-page]');
+      if (button) { 
+        e.preventDefault(); 
+        const page = button.dataset.page; 
+        if (page) navigate(page); 
+        if (window.innerWidth <= 768) setTimeout(closeSidebar, 300);
+      }
+    });
+
+    // Modal close
+    document.getElementById('modal-close').onclick = () => 
+      document.getElementById('modal-overlay').classList.remove('show');
+
+    if (configured) {
+      setTimeout(() => loadSession(), 100);
+    } else {
+      hideLoadingScreen();
+      $("#auth-message").textContent = "Add your Supabase Project URL and anon key to config.js before signing in.";
+    }
+  }
+
+  // Start the app
+  init();
+})();
