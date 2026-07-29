@@ -7,12 +7,12 @@ window.APP_CONFIG = {
   // STEP 2: Create a new project
   // STEP 3: Copy your project URL from the dashboard
   // Example: "https://abcdefghijklmnop.supabase.co"
-  SUPABASE_URL: "https://YOUR_PROJECT_ID.supabase.co",
+  SUPABASE_URL: "https://azlhshxaccoreinjuoua.supabase.co",
   
   // STEP 4: Go to Project Settings > API
   // STEP 5: Copy the "anon public" key
   // Example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  SUPABASE_ANON_KEY: "YOUR_ANON_KEY_HERE"
+  SUPABASE_ANON_KEY: "sb_publishable_8nrFhaX42uaCZnyLDHrr1A_qP7X1KuQ"
 };
 
 // ============================================================
