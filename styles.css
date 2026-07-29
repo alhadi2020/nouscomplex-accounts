@@ -1,5 +1,6 @@
 /* ============================================================
    NOUS COMPLEX - ACCOUNT MANAGEMENT SYSTEM STYLES
+   IMPROVED BUTTON VISIBILITY
    ============================================================ */
 
 * {
@@ -495,6 +496,179 @@ html, body {
 }
 
 /* ============================================================
+   BUTTONS - IMPROVED VISIBILITY
+   ============================================================ */
+
+/* Primary Button - Most prominent */
+.primary {
+  background: #4f46e5 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 48px !important;
+}
+
+.primary:hover {
+  background: #4338ca !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.45) !important;
+}
+
+.primary:active {
+  transform: scale(0.96) !important;
+}
+
+/* Secondary Button */
+.secondary {
+  background: #e5e7eb !important;
+  color: #374151 !important;
+  border: 2px solid #d1d5db !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 48px !important;
+}
+
+.secondary:hover {
+  background: #d1d5db !important;
+  border-color: #9ca3af !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Danger Button */
+.danger {
+  background: #ef4444 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 48px !important;
+}
+
+.danger:hover {
+  background: #dc2626 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45) !important;
+}
+
+/* Success Button */
+.success {
+  background: #22c55e !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 48px !important;
+}
+
+.success:hover {
+  background: #16a34a !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.45) !important;
+}
+
+/* Warning Button */
+.warning {
+  background: #f59e0b !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 48px !important;
+}
+
+.warning:hover {
+  background: #d97706 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45) !important;
+}
+
+/* Text Button (for inline actions) */
+.text-button {
+  background: transparent !important;
+  color: #4f46e5 !important;
+  border: none !important;
+  padding: 8px 14px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  border-radius: 6px !important;
+  min-height: 36px !important;
+}
+
+.text-button:hover {
+  background: rgba(79, 70, 229, 0.1) !important;
+  color: #4338ca !important;
+}
+
+.text-button.danger {
+  color: #ef4444 !important;
+}
+
+.text-button.danger:hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #dc2626 !important;
+}
+
+/* ============================================================
+   TOOLBAR - IMPROVED BUTTON CONTAINER
+   ============================================================ */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 15px 0;
+  padding: 10px 0;
+}
+
+.toolbar button {
+  flex: 0 1 auto;
+  min-width: 120px;
+  justify-content: center;
+}
+
+/* ============================================================
    FORMS
    ============================================================ */
 
@@ -528,77 +702,6 @@ html, body {
   border-color: #4f46e5;
   outline: none;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-}
-
-/* ============================================================
-   TOOLBAR
-   ============================================================ */
-
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 10px 0;
-}
-
-.toolbar button {
-  padding: 10px 18px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.toolbar button:active {
-  transform: scale(0.97);
-}
-
-.toolbar .primary {
-  background: #4f46e5;
-  color: white;
-}
-
-.toolbar .primary:hover {
-  background: #4338ca;
-}
-
-.toolbar .secondary {
-  background: #e5e7eb;
-  color: #374151;
-}
-
-.toolbar .secondary:hover {
-  background: #d1d5db;
-}
-
-.toolbar .danger {
-  background: #ef4444;
-  color: white;
-}
-
-.toolbar .danger:hover {
-  background: #dc2626;
-}
-
-.toolbar .success {
-  background: #22c55e;
-  color: white;
-}
-
-.toolbar .success:hover {
-  background: #16a34a;
-}
-
-.toolbar .warning {
-  background: #f59e0b;
-  color: white;
-}
-
-.toolbar .warning:hover {
-  background: #d97706;
 }
 
 /* ============================================================
@@ -640,8 +743,9 @@ html, body {
 
 .table-wrap .row-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .table-wrap .row-actions button {
@@ -649,24 +753,28 @@ html, body {
   border: none;
   cursor: pointer;
   font-size: 12px;
-  padding: 4px 8px;
+  padding: 6px 10px;
   border-radius: 4px;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
 .table-wrap .row-actions .text-button {
   color: #4f46e5;
+  background: rgba(79, 70, 229, 0.08);
 }
 
 .table-wrap .row-actions .text-button:hover {
-  background: rgba(79, 70, 229, 0.1);
+  background: rgba(79, 70, 229, 0.2);
 }
 
 .table-wrap .row-actions .danger {
   color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
 }
 
 .table-wrap .row-actions .danger:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.2);
 }
 
 /* ============================================================
@@ -895,6 +1003,19 @@ html, body {
     border-radius: 8px; 
   }
   
+  .panel-heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .panel-heading .primary,
+  .panel-heading .secondary,
+  .panel-heading .danger {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  
   .form-grid { 
     grid-template-columns: 1fr !important; 
     gap: 10px; 
@@ -906,9 +1027,10 @@ html, body {
   }
   
   .toolbar button { 
-    width: 100%; 
+    width: 100% !important; 
     justify-content: center; 
-    padding: 12px; 
+    padding: 14px !important;
+    min-height: 50px !important;
   }
   
   .table-wrap table { 
@@ -929,6 +1051,16 @@ html, body {
   }
   
   .modal-overlay .modal-content h2 { font-size: 19px; }
+  
+  .table-wrap .row-actions {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .table-wrap .row-actions button {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 @media (max-width: 400px) {
@@ -964,6 +1096,16 @@ html, body {
   .table-wrap table th, 
   .table-wrap table td { 
     padding: 6px 8px; 
+  }
+  
+  .primary,
+  .secondary,
+  .danger,
+  .success,
+  .warning {
+    padding: 10px 16px !important;
+    font-size: 13px !important;
+    min-height: 44px !important;
   }
 }
 
