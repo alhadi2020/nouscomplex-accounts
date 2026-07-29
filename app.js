@@ -1,6 +1,6 @@
 // ============================================================
 // NOUS COMPLEX - ACCOUNT MANAGEMENT SYSTEM
-// Complete JavaScript Application
+// Complete JavaScript Application - FIXED VERSION
 // ============================================================
 
 (() => {
@@ -30,6 +30,30 @@
   const isoToday = () => toLocalISODate(new Date());
   const esc = (v = "") => String(v).replace(/[&<>'"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#39;", '"':"&quot;" })[c]);
   const formatCurrency = (amount) => `PKR ${Number(amount).toFixed(2)}`;
+
+  // Helper: Convert empty string to null for date fields
+  const cleanDate = (value) => {
+    if (!value || value === '') return null;
+    return value;
+  };
+
+  // Helper: Clean form data - convert empty strings to null for date fields
+  const cleanFormData = (data) => {
+    const cleaned = {};
+    const dateFields = [
+      'joining_date', 'exit_date', 'increment_date', 'concession_date',
+      'increment_date', 'decrement_date', 'payment_date', 'date'
+    ];
+    
+    for (const [key, value] of Object.entries(data)) {
+      if (dateFields.includes(key)) {
+        cleaned[key] = cleanDate(value);
+      } else {
+        cleaned[key] = value;
+      }
+    }
+    return cleaned;
+  };
 
   const flash = (message, error = false) => { 
     const el = $("#flash"); 
@@ -285,7 +309,7 @@
   }
 
   // ============================================================
-  // STUDENTS
+  // STUDENTS - FIXED
   // ============================================================
   
   async function students() {
@@ -370,33 +394,47 @@
   async function createStudent(e) {
     e.preventDefault();
     const f = new FormData(e.target);
-    const data = Object.fromEntries(f.entries());
+    const rawData = Object.fromEntries(f.entries());
+    
+    // Clean the data - convert empty strings to null for dates
+    const data = cleanFormData(rawData);
     data.fee = parseFloat(data.fee) || 0;
     data.fee_increment = parseFloat(data.fee_increment) || 0;
     data.concession = parseFloat(data.concession) || 0;
     data.active = data.active === 'true';
+    
     try {
       await api(state.db.from("students").insert(data));
       flash("Student added successfully.");
       await loadAllData();
       students();
-    } catch (err) { flash(err.message, true); }
+    } catch (err) { 
+      console.error('Error creating student:', err);
+      flash(err.message, true); 
+    }
   }
 
   async function updateStudent(e, id) {
     e.preventDefault();
     const f = new FormData(e.target);
-    const data = Object.fromEntries(f.entries());
+    const rawData = Object.fromEntries(f.entries());
+    
+    // Clean the data - convert empty strings to null for dates
+    const data = cleanFormData(rawData);
     data.fee = parseFloat(data.fee) || 0;
     data.fee_increment = parseFloat(data.fee_increment) || 0;
     data.concession = parseFloat(data.concession) || 0;
     data.active = data.active === 'true';
+    
     try {
       await api(state.db.from("students").update(data).eq("id", id));
       flash("Student updated successfully.");
       await loadAllData();
       students();
-    } catch (err) { flash(err.message, true); }
+    } catch (err) { 
+      console.error('Error updating student:', err);
+      flash(err.message, true); 
+    }
   }
 
   async function deleteStudent(id) {
@@ -520,7 +558,7 @@
   }
 
   // ============================================================
-  // TEACHERS
+  // TEACHERS - FIXED
   // ============================================================
   
   async function teachers() {
@@ -592,35 +630,49 @@
   async function createTeacher(e) {
     e.preventDefault();
     const f = new FormData(e.target);
-    const data = Object.fromEntries(f.entries());
+    const rawData = Object.fromEntries(f.entries());
+    
+    // Clean the data - convert empty strings to null for dates
+    const data = cleanFormData(rawData);
     data.salary = parseFloat(data.salary) || 0;
     data.increment = parseFloat(data.increment) || 0;
     data.decrement = parseFloat(data.decrement) || 0;
     data.leaves = parseInt(data.leaves) || 0;
     data.active = data.active === 'true';
+    
     try {
       await api(state.db.from("teachers").insert(data));
       flash("Teacher added.");
       await loadAllData();
       teachers();
-    } catch (err) { flash(err.message, true); }
+    } catch (err) { 
+      console.error('Error creating teacher:', err);
+      flash(err.message, true); 
+    }
   }
 
   async function updateTeacher(e, id) {
     e.preventDefault();
     const f = new FormData(e.target);
-    const data = Object.fromEntries(f.entries());
+    const rawData = Object.fromEntries(f.entries());
+    
+    // Clean the data - convert empty strings to null for dates
+    const data = cleanFormData(rawData);
     data.salary = parseFloat(data.salary) || 0;
     data.increment = parseFloat(data.increment) || 0;
     data.decrement = parseFloat(data.decrement) || 0;
     data.leaves = parseInt(data.leaves) || 0;
     data.active = data.active === 'true';
+    
     try {
       await api(state.db.from("teachers").update(data).eq("id", id));
       flash("Teacher updated.");
       await loadAllData();
       teachers();
-    } catch (err) { flash(err.message, true); }
+    } catch (err) { 
+      console.error('Error updating teacher:', err);
+      flash(err.message, true); 
+    }
   }
 
   async function deleteTeacher(id) {
