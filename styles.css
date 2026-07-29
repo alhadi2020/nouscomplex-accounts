@@ -1,6 +1,5 @@
 /* ============================================================
    NOUS COMPLEX - ACCOUNT MANAGEMENT SYSTEM STYLES
-   IMPROVED BUTTON VISIBILITY
    ============================================================ */
 
 * {
@@ -469,6 +468,39 @@ html, body {
 .stats .blue strong { color: #1e40af; }
 
 /* ============================================================
+   PAYABLE HIGHLIGHT
+   ============================================================ */
+
+.payable-highlight {
+  background: #fef2f2 !important;
+  border: 2px solid #991b1b !important;
+  border-radius: 8px !important;
+  padding: 15px !important;
+}
+
+.payable-highlight strong {
+  color: #991b1b !important;
+  font-size: 28px !important;
+}
+
+.payable-summary-panel {
+  margin-top: 20px;
+  background: #fef2f2;
+  border: 2px solid #991b1b;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.total-row {
+  background: #f1f5f9 !important;
+  font-weight: 600 !important;
+}
+
+.total-row td {
+  border-top: 2px solid #1a1a2e !important;
+}
+
+/* ============================================================
    PANELS
    ============================================================ */
 
@@ -496,10 +528,9 @@ html, body {
 }
 
 /* ============================================================
-   BUTTONS - IMPROVED VISIBILITY
+   BUTTONS
    ============================================================ */
 
-/* Primary Button - Most prominent */
 .primary {
   background: #4f46e5 !important;
   color: white !important;
@@ -523,11 +554,6 @@ html, body {
   box-shadow: 0 6px 20px rgba(79, 70, 229, 0.45) !important;
 }
 
-.primary:active {
-  transform: scale(0.96) !important;
-}
-
-/* Secondary Button */
 .secondary {
   background: #e5e7eb !important;
   color: #374151 !important;
@@ -550,7 +576,6 @@ html, body {
   transform: translateY(-2px) !important;
 }
 
-/* Danger Button */
 .danger {
   background: #ef4444 !important;
   color: white !important;
@@ -574,55 +599,6 @@ html, body {
   box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45) !important;
 }
 
-/* Success Button */
-.success {
-  background: #22c55e !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 8px !important;
-  padding: 12px 24px !important;
-  font-size: 15px !important;
-  font-weight: 700 !important;
-  cursor: pointer !important;
-  transition: all 0.3s ease !important;
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  min-height: 48px !important;
-}
-
-.success:hover {
-  background: #16a34a !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.45) !important;
-}
-
-/* Warning Button */
-.warning {
-  background: #f59e0b !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 8px !important;
-  padding: 12px 24px !important;
-  font-size: 15px !important;
-  font-weight: 700 !important;
-  cursor: pointer !important;
-  transition: all 0.3s ease !important;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  min-height: 48px !important;
-}
-
-.warning:hover {
-  background: #d97706 !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45) !important;
-}
-
-/* Text Button (for inline actions) */
 .text-button {
   background: transparent !important;
   color: #4f46e5 !important;
@@ -651,7 +627,7 @@ html, body {
 }
 
 /* ============================================================
-   TOOLBAR - IMPROVED BUTTON CONTAINER
+   TOOLBAR
    ============================================================ */
 
 .toolbar {
@@ -852,24 +828,6 @@ html, body {
   background: #f0fdf4;
   color: #166534;
   border: 1px solid #bbf7d0;
-}
-
-/* ============================================================
-   ADMIN PANELS
-   ============================================================ */
-
-.admin-panel {
-  background: rgba(79, 70, 229, 0.05);
-  border: 1px solid rgba(79, 70, 229, 0.2);
-  border-radius: 8px;
-  padding: 15px;
-  margin-top: 15px;
-}
-
-.admin-panel h3 {
-  color: #4f46e5;
-  margin-top: 0;
-  font-size: 16px;
 }
 
 /* ============================================================
@@ -1100,12 +1058,14 @@ html, body {
   
   .primary,
   .secondary,
-  .danger,
-  .success,
-  .warning {
+  .danger {
     padding: 10px 16px !important;
     font-size: 13px !important;
     min-height: 44px !important;
+  }
+  
+  .payable-highlight strong {
+    font-size: 22px !important;
   }
 }
 
