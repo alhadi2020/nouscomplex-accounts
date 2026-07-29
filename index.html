@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes">
+  <title>Nous Complex - Account Management</title>
+  <link rel="icon" type="image/png" href="nouscomplex.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div id="loading-screen">
+    <div class="spinner"></div>
+    <div class="logo-text">Nous Complex</div>
+    <div class="sub-text" id="loading-message">Loading accounts...</div>
+  </div>
+
+  <!-- Auth Screen -->
+  <main id="auth-screen" class="auth-shell">
+    <section class="auth-card">
+      <div style="text-align: center;">
+        <img src="nouscomplex.png" alt="Nous Complex" class="auth-logo">
+        <div class="brand-title">
+          <span class="company-name">Nous <span class="highlight">Complex</span></span>
+          <span class="portal-subtitle">Account Management</span>
+        </div>
+        <form id="auth-form">
+          <label>Email
+            <input id="auth-email" type="email" required autocomplete="email">
+          </label>
+          <label>Password
+            <input id="auth-password" type="password" required minlength="8" autocomplete="current-password">
+          </label>
+          <button id="auth-submit" class="primary" type="submit">Sign in</button>
+        </form>
+        <div class="auth-links">
+          <button id="forgot-password-btn" class="text-button" type="button">Forgot Password?</button>
+          <button id="signup-button" class="text-button" type="button">New Account?</button>
+        </div>
+        <p id="auth-message" class="message"></p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Main App -->
+  <div id="app" class="app hidden">
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+      <button class="sidebar-close-btn" id="sidebar-close-btn">✕</button>
+      <div class="brand">
+        <img src="nouscomplex.png" alt="Nous Complex Logo">
+        <span>Nous Complex</span>
+      </div>
+      <nav id="nav">
+        <button data-page="dashboard" class="active">Dashboard</button>
+        <button data-page="students">Students</button>
+        <button data-page="classes">Classes</button>
+        <button data-page="teachers">Teachers</button>
+        <button data-page="fee">Fee Collection</button>
+        <button data-page="salary">Pay Salary</button>
+        <button data-page="expenses">Expenses</button>
+        <button data-page="balance-sheet">Balance Sheet</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <p id="user-name"></p>
+        <span id="user-role" class="role-badge"></span>
+        <button id="signout">Sign Out</button>
+      </div>
+    </aside>
+
+    <section class="main">
+      <header>
+        <div>
+          <h1 id="page-title">Dashboard</h1>
+          <p id="today"></p>
+        </div>
+      </header>
+      <div id="flash" class="flash"></div>
+      <div id="page-content"></div>
+    </section>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-content" id="modal-content">
+      <button class="close-modal" id="modal-close">✕</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Templates -->
+  <template id="dashboard-template">
+    <div class="stats">
+      <article class="blue"><span>Total Students</span><strong data-stat="students">0</strong></article>
+      <article class="green"><span>Total Fee Collected</span><strong data-stat="fee-collected">PKR 0</strong></article>
+      <article><span>Total Teachers</span><strong data-stat="teachers">0</strong></article>
+      <article class="red"><span>Total Salary Paid</span><strong data-stat="salary-paid">PKR 0</strong></article>
+      <article><span>Total Expenses</span><strong data-stat="expenses">PKR 0</strong></article>
+      <article class="blue"><span>Net Balance</span><strong data-stat="net-balance">PKR 0</strong></article>
+    </div>
+    <div class="panel">
+      <div class="panel-heading">
+        <h2>Recent Transactions</h2>
+      </div>
+      <div id="recent-transactions"></div>
+    </div>
+  </template>
+
+  <template id="students-template">
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Students</h2>
+        <button class="primary" id="add-student">Add Student</button>
+      </div>
+      <div id="student-form" class="inline-form hidden"></div>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <label>Filter by Class <select id="student-class-filter"><option value="">All Classes</option></select></label>
+        <label>Status <select id="student-status-filter"><option value="">All</option><option value="active">Active</option><option value="inactive">Inactive</option></select></label>
+      </div>
+      <div id="students-table"></div>
+    </section>
+  </template>
+
+  <template id="classes-template">
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Classes</h2>
+        <button class="primary" id="add-class">Add Class</button>
+      </div>
+      <div id="class-form" class="inline-form hidden"></div>
+      <div id="classes-table"></div>
+    </section>
+  </template>
+
+  <template id="teachers-template">
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Teachers</h2>
+        <button class="primary" id="add-teacher">Add Teacher</button>
+      </div>
+      <div id="teacher-form" class="inline-form hidden"></div>
+      <div id="teachers-table"></div>
+    </section>
+  </template>
+
+  <template id="fee-template">
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Fee Collection</h2>
+      </div>
+      <div class="form-grid">
+        <label>Student <select id="fee-student"><option value="">Select Student</option></select></label>
+        <label>Amount (PKR) <input id="fee-amount" type="number" step="0.01" placeholder="0"></label>
+        <label>Date <input id="fee-date" type="date"></label>
+      </div>
+      <div class="toolbar">
+        <button id="record-fee" class="primary">Record Fee Payment</button>
+      </div>
+      <div id="fee-history"></div>
+    </section>
+  </template>
+
+  <template id="salary-template">
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Pay Salary</h2>
+      </div>
+      <div class="form-grid">
+        <label>Teacher <select id="salary-teacher"><option value="">Select Teacher</option></select></label>
+        <label>Amount (PKR) <input id="salary-amount" type="number" step="0.01" placeholder="0"></label>
+        <label>Date <input id="salary-date" type="date"></label>
+      </div>
+      <div class="toolbar">
+        <button id="record-salary" class="primary">Record Salary Payment</button>
+      </div>
+      <div id="salary-history"></div>
+    </section>
+  </template>
+
+  <template id="expenses-template">
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Expenses</h2>
+        <button class="primary" id="add-expense-category">Add Category</button>
+      </div>
+      <div class="form-grid">
+        <label>Category <select id="expense-category"><option value="">Select Category</option></select></label>
+        <label>Description <input id="expense-description" placeholder="Description"></label>
+        <label>Amount (PKR) <input id="expense-amount" type="number" step="0.01" placeholder="0"></label>
+        <label>Date <input id="expense-date" type="date"></label>
+      </div>
+      <div class="toolbar">
+        <button id="record-expense" class="primary">Record Expense</button>
+      </div>
+      <div id="expense-categories"></div>
+      <div id="expense-history"></div>
+    </section>
+  </template>
+
+  <template id="balance-sheet-template">
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Balance Sheet</h2>
+      </div>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;">
+        <label>Year <select id="balance-year"></select></label>
+        <label>Month <select id="balance-month"><option value="">All Months</option></select></label>
+        <label>View <select id="balance-view"><option value="summary">Summary</option><option value="detailed">Detailed</option></select></label>
+      </div>
+      <div id="balance-sheet-content"></div>
+    </section>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
