@@ -37,17 +37,28 @@
     return value;
   };
 
-  // Helper: Clean form data - convert empty strings to null for date fields
+  // Helper: Convert empty string to null for UUID fields
+  const cleanUUID = (value) => {
+    if (!value || value === '') return null;
+    return value;
+  };
+
+  // Helper: Clean form data - convert empty strings to null for date and UUID fields
   const cleanFormData = (data) => {
     const cleaned = {};
     const dateFields = [
       'joining_date', 'exit_date', 'increment_date', 'concession_date',
       'increment_date', 'decrement_date', 'payment_date', 'date'
     ];
+    const uuidFields = [
+      'class_id', 'teacher_id', 'student_id', 'category_id'
+    ];
     
     for (const [key, value] of Object.entries(data)) {
       if (dateFields.includes(key)) {
         cleaned[key] = cleanDate(value);
+      } else if (uuidFields.includes(key)) {
+        cleaned[key] = cleanUUID(value);
       } else {
         cleaned[key] = value;
       }
@@ -237,14 +248,14 @@
     );
     
     const titles = { 
-      dashboard: "Dashboard", 
-      students: "Students", 
-      classes: "Classes", 
-      teachers: "Teachers", 
-      fee: "Fee Collection", 
-      salary: "Pay Salary", 
-      expenses: "Expenses", 
-      "balance-sheet": "Balance Sheet" 
+      dashboard: "📊 Dashboard", 
+      students: "👨‍🎓 Students", 
+      classes: "📚 Classes", 
+      teachers: "👨‍🏫 Teachers", 
+      fee: "💰 Fee Collection", 
+      salary: "💳 Pay Salary", 
+      expenses: "📝 Expenses", 
+      "balance-sheet": "📊 Balance Sheet" 
     };
     
     $("#page-title").textContent = titles[page] || "Dashboard";
@@ -345,9 +356,9 @@
             <td>${s.concession ? formatCurrency(s.concession) + (s.concession_date ? ' from ' + esc(s.concession_date) : '') : '—'}</td>
             <td><span class="status ${s.active !== false ? 'active' : 'inactive'}">${s.active !== false ? 'Active' : 'Inactive'}</span></td>
             <td class="row-actions">
-              <button class="text-button edit-student" data-id="${s.id}">Edit</button>
-              <button class="text-button toggle-student" data-id="${s.id}">${s.active !== false ? 'Deactivate' : 'Activate'}</button>
-              <button class="danger delete-student" data-id="${s.id}">Delete</button>
+              <button class="text-button edit-student" data-id="${s.id}">✏️ Edit</button>
+              <button class="text-button toggle-student" data-id="${s.id}">${s.active !== false ? '🔴 Deactivate' : '🟢 Activate'}</button>
+              <button class="danger delete-student" data-id="${s.id}">🗑️ Delete</button>
             </td>
           </tr>`;
         }).join('')}</tbody>
@@ -382,8 +393,8 @@
         <label>Status <select name="active"><option value="true" ${student?.active !== false ? 'selected' : ''}>Active</option><option value="false" ${student?.active === false ? 'selected' : ''}>Inactive</option></select></label>
       </div>
       <div class="toolbar">
-        <button class="primary">${student ? 'Update Student' : 'Add Student'}</button>
-        <button type="button" class="secondary" id="cancel-student-form">Cancel</button>
+        <button class="primary">💾 ${student ? 'Update Student' : 'Add Student'}</button>
+        <button type="button" class="secondary" id="cancel-student-form">❌ Cancel</button>
       </div>
     </form>`;
     
@@ -396,7 +407,6 @@
     const f = new FormData(e.target);
     const rawData = Object.fromEntries(f.entries());
     
-    // Clean the data - convert empty strings to null for dates
     const data = cleanFormData(rawData);
     data.fee = parseFloat(data.fee) || 0;
     data.fee_increment = parseFloat(data.fee_increment) || 0;
@@ -405,7 +415,7 @@
     
     try {
       await api(state.db.from("students").insert(data));
-      flash("Student added successfully.");
+      flash("✅ Student added successfully.");
       await loadAllData();
       students();
     } catch (err) { 
@@ -419,7 +429,6 @@
     const f = new FormData(e.target);
     const rawData = Object.fromEntries(f.entries());
     
-    // Clean the data - convert empty strings to null for dates
     const data = cleanFormData(rawData);
     data.fee = parseFloat(data.fee) || 0;
     data.fee_increment = parseFloat(data.fee_increment) || 0;
@@ -428,7 +437,7 @@
     
     try {
       await api(state.db.from("students").update(data).eq("id", id));
-      flash("Student updated successfully.");
+      flash("✅ Student updated successfully.");
       await loadAllData();
       students();
     } catch (err) { 
@@ -441,7 +450,7 @@
     if (!confirm("Delete this student? This cannot be undone.")) return;
     try {
       await api(state.db.from("students").delete().eq("id", id));
-      flash("Student deleted.");
+      flash("🗑️ Student deleted.");
       await loadAllData();
       students();
     } catch (err) { 
@@ -454,14 +463,14 @@
     if (!student) return;
     try {
       await api(state.db.from("students").update({ active: student.active !== false ? false : true }).eq("id", id));
-      flash(student.active !== false ? "Student deactivated." : "Student activated.");
+      flash(student.active !== false ? "🔴 Student deactivated." : "🟢 Student activated.");
       await loadAllData();
       students();
     } catch (err) { flash(err.message, true); }
   }
 
   // ============================================================
-  // CLASSES
+  // CLASSES - FIXED
   // ============================================================
   
   async function classes() {
@@ -485,8 +494,8 @@
             <td>${esc(c.batch_no || '—')}</td>
             <td>${teacher ? esc(teacher.name) : 'Unassigned'}</td>
             <td class="row-actions">
-              <button class="text-button edit-class" data-id="${c.id}">Edit</button>
-              <button class="danger delete-class" data-id="${c.id}">Delete</button>
+              <button class="text-button edit-class" data-id="${c.id}">✏️ Edit</button>
+              <button class="danger delete-class" data-id="${c.id}">🗑️ Delete</button>
             </td>
           </tr>`;
         }).join('')}</tbody>
@@ -512,8 +521,8 @@
         <label>Teacher <select name="teacher_id"><option value="">Unassigned</option>${teacherOptions}</select></label>
       </div>
       <div class="toolbar">
-        <button class="primary">${cls ? 'Update Class' : 'Add Class'}</button>
-        <button type="button" class="secondary" id="cancel-class-form">Cancel</button>
+        <button class="primary">💾 ${cls ? 'Update Class' : 'Add Class'}</button>
+        <button type="button" class="secondary" id="cancel-class-form">❌ Cancel</button>
       </div>
     </form>`;
     
@@ -524,32 +533,46 @@
   async function createClass(e) {
     e.preventDefault();
     const f = new FormData(e.target);
-    const data = Object.fromEntries(f.entries());
+    const rawData = Object.fromEntries(f.entries());
+    
+    // Clean the data - convert empty strings to null for UUID fields
+    const data = cleanFormData(rawData);
+    
     try {
       await api(state.db.from("classes").insert(data));
-      flash("Class added.");
+      flash("✅ Class added successfully.");
       await loadAllData();
       classes();
-    } catch (err) { flash(err.message, true); }
+    } catch (err) { 
+      console.error('Error creating class:', err);
+      flash(err.message, true); 
+    }
   }
 
   async function updateClass(e, id) {
     e.preventDefault();
     const f = new FormData(e.target);
-    const data = Object.fromEntries(f.entries());
+    const rawData = Object.fromEntries(f.entries());
+    
+    // Clean the data - convert empty strings to null for UUID fields
+    const data = cleanFormData(rawData);
+    
     try {
       await api(state.db.from("classes").update(data).eq("id", id));
-      flash("Class updated.");
+      flash("✅ Class updated successfully.");
       await loadAllData();
       classes();
-    } catch (err) { flash(err.message, true); }
+    } catch (err) { 
+      console.error('Error updating class:', err);
+      flash(err.message, true); 
+    }
   }
 
   async function deleteClass(id) {
     if (!confirm("Delete this class? This cannot be undone.")) return;
     try {
       await api(state.db.from("classes").delete().eq("id", id));
-      flash("Class deleted.");
+      flash("🗑️ Class deleted.");
       await loadAllData();
       classes();
     } catch (err) { 
@@ -583,9 +606,9 @@
             <td>${formatCurrency(t.salary || 0)}</td>
             <td><span class="status ${t.active !== false ? 'active' : 'inactive'}">${t.active !== false ? 'Active' : 'Inactive'}</span></td>
             <td class="row-actions">
-              <button class="text-button edit-teacher" data-id="${t.id}">Edit</button>
-              <button class="text-button toggle-teacher" data-id="${t.id}">${t.active !== false ? 'Deactivate' : 'Activate'}</button>
-              <button class="danger delete-teacher" data-id="${t.id}">Delete</button>
+              <button class="text-button edit-teacher" data-id="${t.id}">✏️ Edit</button>
+              <button class="text-button toggle-teacher" data-id="${t.id}">${t.active !== false ? '🔴 Deactivate' : '🟢 Activate'}</button>
+              <button class="danger delete-teacher" data-id="${t.id}">🗑️ Delete</button>
             </td>
           </tr>`;
         }).join('')}</tbody>
@@ -618,8 +641,8 @@
         <label>Status <select name="active"><option value="true" ${teacher?.active !== false ? 'selected' : ''}>Active</option><option value="false" ${teacher?.active === false ? 'selected' : ''}>Inactive</option></select></label>
       </div>
       <div class="toolbar">
-        <button class="primary">${teacher ? 'Update Teacher' : 'Add Teacher'}</button>
-        <button type="button" class="secondary" id="cancel-teacher-form">Cancel</button>
+        <button class="primary">💾 ${teacher ? 'Update Teacher' : 'Add Teacher'}</button>
+        <button type="button" class="secondary" id="cancel-teacher-form">❌ Cancel</button>
       </div>
     </form>`;
     
@@ -632,7 +655,7 @@
     const f = new FormData(e.target);
     const rawData = Object.fromEntries(f.entries());
     
-    // Clean the data - convert empty strings to null for dates
+    // Clean the data - convert empty strings to null for dates and UUIDs
     const data = cleanFormData(rawData);
     data.salary = parseFloat(data.salary) || 0;
     data.increment = parseFloat(data.increment) || 0;
@@ -642,7 +665,7 @@
     
     try {
       await api(state.db.from("teachers").insert(data));
-      flash("Teacher added.");
+      flash("✅ Teacher added successfully.");
       await loadAllData();
       teachers();
     } catch (err) { 
@@ -656,7 +679,7 @@
     const f = new FormData(e.target);
     const rawData = Object.fromEntries(f.entries());
     
-    // Clean the data - convert empty strings to null for dates
+    // Clean the data - convert empty strings to null for dates and UUIDs
     const data = cleanFormData(rawData);
     data.salary = parseFloat(data.salary) || 0;
     data.increment = parseFloat(data.increment) || 0;
@@ -666,7 +689,7 @@
     
     try {
       await api(state.db.from("teachers").update(data).eq("id", id));
-      flash("Teacher updated.");
+      flash("✅ Teacher updated successfully.");
       await loadAllData();
       teachers();
     } catch (err) { 
@@ -679,7 +702,7 @@
     if (!confirm("Delete this teacher? This cannot be undone.")) return;
     try {
       await api(state.db.from("teachers").delete().eq("id", id));
-      flash("Teacher deleted.");
+      flash("🗑️ Teacher deleted.");
       await loadAllData();
       teachers();
     } catch (err) { 
@@ -692,7 +715,7 @@
     if (!teacher) return;
     try {
       await api(state.db.from("teachers").update({ active: teacher.active !== false ? false : true }).eq("id", id));
-      flash(teacher.active !== false ? "Teacher deactivated." : "Teacher activated.");
+      flash(teacher.active !== false ? "🔴 Teacher deactivated." : "🟢 Teacher activated.");
       await loadAllData();
       teachers();
     } catch (err) { flash(err.message, true); }
@@ -742,7 +765,7 @@
         amount: amount,
         payment_date: date
       }));
-      flash("Fee payment recorded.");
+      flash("✅ Fee payment recorded.");
       await loadAllData();
       fee();
     } catch (err) { flash(err.message, true); }
@@ -792,7 +815,7 @@
         amount: amount,
         payment_date: date
       }));
-      flash("Salary payment recorded.");
+      flash("✅ Salary payment recorded.");
       await loadAllData();
       salary();
     } catch (err) { flash(err.message, true); }
@@ -850,7 +873,7 @@
         amount: amount,
         date: date
       }));
-      flash("Expense recorded.");
+      flash("✅ Expense recorded.");
       await loadAllData();
       expenses();
     } catch (err) { flash(err.message, true); }
@@ -865,8 +888,8 @@
         <label>Category Name <input id="new-category-name" placeholder="e.g., Utilities, Rent, Supplies"></label>
       </div>
       <div class="toolbar">
-        <button id="save-category" class="primary">Save Category</button>
-        <button id="cancel-category" class="secondary">Cancel</button>
+        <button id="save-category" class="primary">💾 Save Category</button>
+        <button id="cancel-category" class="secondary">❌ Cancel</button>
       </div>
     `;
     modal.classList.add('show');
@@ -876,7 +899,7 @@
       if (!name) { flash("Please enter a category name.", true); return; }
       try {
         await api(state.db.from("expense_categories").insert({ name }));
-        flash("Category added.");
+        flash("✅ Category added.");
         await loadAllData();
         modal.classList.remove('show');
         expenses();
